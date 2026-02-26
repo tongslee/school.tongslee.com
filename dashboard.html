@@ -443,7 +443,7 @@
             const assignmentsHtml = subject.assignments.map(a => {
               const statuses = loadStatuses();
               const status = statuses[a.id] || a.status || 'not-started';
-              const assignmentLink = a.link || `https://www.google.com/search?q=${encodeURIComponent(a.title + ' ' + subject.display_name)}`;
+              const assignmentLink = a.link || `https://classroom.google.com/u/1/search?q=${encodeURIComponent(a.title)}`;
               return `
               <div class="assignment">
                 <div class="assignment-title"><a href="${assignmentLink}" target="_blank">${a.title}</a></div>
@@ -662,7 +662,7 @@
       else dueText = `📅 ${dueText}`;
       
       const statusClass = getStatusDisplayClass(assignment.status);
-      const assignmentLink = assignment.link || `https://www.google.com/search?q=${encodeURIComponent(assignment.title + ' ' + (assignment.subject?.display_name || ''))}`;
+      const assignmentLink = assignment.link || `https://classroom.google.com/u/1/search?q=${encodeURIComponent(assignment.title)}`;
       
       return `
         <div class="focus-assignment ${dueClass}">
