@@ -1,0 +1,26 @@
+{
+  "courses": [
+    {"id": "ODI0ODU1Njk4Mjc1", "name": "7th Media and Film H block-Ms. Umi-sem2"},
+    {"id": "ODQxMjk4ODI2NTU5", "name": "F7 Design Mr Smith"},
+    {"id": "ODIzMDIzODMwNTkx", "name": "Field Trip"},
+    {"id": "Nzc5NzcyNzk1Nzcw", "name": "I GR6-8 Middle School Band Mrs. Rosas 2025-26, Semester 1 & 2"},
+    {"id": "Nzg1MjA1ODM5MDc0", "name": "A7 Science Ms.Nekay 25-26 Grade 7"},
+    {"id": "Nzk4ODY5NDczNjc4", "name": "Semester 1- H7 block- Theatre Semester 1"},
+    {"id": "NzkxODg1NDgxMzU2", "name": "F7 Product Design - Jennifer Baker 2025-2026"},
+    {"id": "NzkxMzEzODg4Njgw", "name": "7D I&S - Mani-Kandt 2025-26"},
+    {"id": "Nzk4ODU4NDk3MzM5", "name": "CLA Inter Mid B"},
+    {"id": "NzkxNjkyMjg4Mjc2", "name": "C7 Michielsen English 25-26"},
+    {"id": "NzAwNTk3OTY0NTY3", "name": "7th Grade"},
+    {"id": "NzkxNzEzMzY5OTgx", "name": "E 7th Math 25-26 E - 7th"},
+    {"id": "NzkxNjg2NTU4NDY5", "name": "7G Physical and Health Education Mr. Hesse 2025-26 7G"},
+    {"id": "NzYxNTg2NzM3MDE2", "name": "C GR6 Beginning Band Mrs. Rosas 2024-25 Semester 2"}
+  ],
+  "assignments": [
+    {"title": "Afro Beats dance reflection", "course": "7G Physical and Health Education Mr. Hesse 2025-26 7G", "dueDate": "2026-03-09"},
+    {"title": "3.10 SUMMATIVE ESSAY", "course": "C7 Michielsen English 25-26", "dueDate": "2026-03-12"},
+    {"title": "Pi Day Project - Criteria C/D Summative", "course": "E 7th Math 25-26 E - 7th", "dueDate": "2026-03-13"},
+    {"title": "Summative 2 - Criterion A", "course": "7th Media and Film H block-Ms. Umi-sem2", "dueDate": "2026-03-26"},
+    {"title": "Criterion B", "course": "F7 Design Mr Smith", "dueDate": "2026-04-03"},
+    {"title": "Community Engagement Portfolio", "course": "7th Grade", "dueDate": "2026-05-15"}
+  ]
+}
