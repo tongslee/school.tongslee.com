@@ -52,6 +52,53 @@
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: #4338ca; }
     .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-active { background: var(--primary); color: white; }
+    
+    /* Focus View Styles */
+    .focus-view { display: none; }
+    .focus-view.active { display: block; }
+    .weeks-container.hidden { display: none; }
+    
+    .urgency-section { margin-bottom: 1.5rem; }
+    .urgency-header { 
+      padding: 1rem; 
+      border-radius: 8px; 
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+    .urgency-this-week { 
+      background: #fef2f2; 
+      border-left: 4px solid #ef4444;
+      color: #b91c1c;
+    }
+    .urgency-next-week { 
+      background: #fffbeb; 
+      border-left: 4px solid #f59e0b;
+      color: #b45309;
+    }
+    .urgency-two-weeks { 
+      background: #eff6ff; 
+      border-left: 4px solid #3b82f6;
+      color: #1d4ed8;
+    }
+    .focus-assignment { 
+      padding: 0.75rem; 
+      margin-bottom: 0.5rem; 
+      background: white; 
+      border-radius: 8px; 
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .focus-assignment-title { font-weight: 500; }
+    .focus-assignment-subject { font-size: 0.8rem; color: var(--text-light); }
+    .focus-assignment-date { font-size: 0.85rem; font-weight: 500; }
+    .focus-assignment.due-today { border-left: 3px solid #ef4444; }
+    .focus-assignment.due-tomorrow { border-left: 3px solid #f59e0b; }
+    .focus-assignment.due-this-week { border-left: 3px solid #eab308; }
+    .focus-assignment.due-next-week { border-left: 3px solid #3b82f6; }
+    .focus-assignment.due-two-weeks { border-left: 3px solid #6366f1; }
     .legend { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--text-light); }
     .legend-item { display: flex; align-items: center; gap: 0.25rem; }
     .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
@@ -185,11 +232,12 @@
     </div>
     <div class="header-actions">
       <div class="legend">
-        <div class="legend-item"><span class="legend-dot" style="background: #3b82f6;"></span>Formative</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #ec4899;"></span>Summative</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #f59e0b;"></span>Project</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #22c55e;"></span>Homework</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span>This Week</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #f59e0b;"></span>Next Week</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #3b82f6;"></span>2 Weeks</div>
       </div>
+      <button class="btn btn-secondary btn-active" id="btnWeeks" onclick="switchView('weeks')">Weeks</button>
+      <button class="btn btn-secondary" id="btnFocus" onclick="switchView('focus')">Focus</button>
       <button class="btn btn-secondary" onclick="goToToday()">Today</button>
       <button class="btn btn-secondary" onclick="toggleAllWeeks()">Toggle All</button>
       <button class="btn btn-primary" onclick="window.print()">Print</button>
@@ -198,6 +246,9 @@
   
   <div class="dashboard">
     <div class="weeks-container" id="weeksContainer">
+      <div class="loading">Loading...</div>
+    </div>
+    <div class="focus-view" id="focusContainer">
       <div class="loading">Loading...</div>
     </div>
   </div>
@@ -448,6 +499,143 @@
         
         currentWeekEl.scrollIntoView({ behavior: 'smooth', inline: 'center' });
       }
+    }
+    
+    function switchView(view) {
+      const weeksContainer = document.getElementById('weeksContainer');
+      const focusContainer = document.getElementById('focusContainer');
+      const btnWeeks = document.getElementById('btnWeeks');
+      const btnFocus = document.getElementById('btnFocus');
+      
+      if (view === 'focus') {
+        weeksContainer.classList.add('hidden');
+        focusContainer.classList.add('active');
+        btnWeeks.classList.remove('btn-active');
+        btnFocus.classList.add('btn-active');
+        renderFocusView();
+      } else {
+        weeksContainer.classList.remove('hidden');
+        focusContainer.classList.remove('active');
+        btnWeeks.classList.add('btn-active');
+        btnFocus.classList.remove('btn-active');
+      }
+    }
+    
+    function renderFocusView() {
+      const container = document.getElementById('focusContainer');
+      const now = new Date();
+      
+      // Calculate date ranges
+      const endOfThisWeek = new Date(now);
+      endOfThisWeek.setDate(now.getDate() + (7 - now.getDay())); // End of this week (Sunday)
+      endOfThisWeek.setHours(23, 59, 59, 999);
+      
+      const endOfNextWeek = new Date(endOfThisWeek);
+      endOfNextWeek.setDate(endOfThisWeek.getDate() + 7);
+      
+      const endOfTwoWeeks = new Date(endOfThisWeek);
+      endOfTwoWeeks.setDate(endOfThisWeek.getDate() + 14);
+      
+      // Filter assignments by urgency
+      const thisWeek = [];
+      const nextWeek = [];
+      const twoWeeks = [];
+      
+      DATA.assignments.forEach(a => {
+        if (!a.due_date) return;
+        const dueDate = new Date(a.due_date);
+        const subject = DATA.subjects.find(s => s.id === a.subject_id);
+        
+        if (dueDate <= endOfThisWeek) {
+          thisWeek.push({ ...a, subject });
+        } else if (dueDate <= endOfNextWeek) {
+          nextWeek.push({ ...a, subject });
+        } else if (dueDate <= endOfTwoWeeks) {
+          twoWeeks.push({ ...a, subject });
+        }
+      });
+      
+      // Sort by due date
+      const sortByDueDate = (a, b) => new Date(a.due_date) - new Date(b.due_date);
+      thisWeek.sort(sortByDueDate);
+      nextWeek.sort(sortByDueDate);
+      twoWeeks.sort(sortByDueDate);
+      
+      let html = '';
+      
+      // This Week Section
+      if (thisWeek.length > 0) {
+        html += `
+          <div class="urgency-section">
+            <div class="urgency-header urgency-this-week">
+              🔴 This Week (${thisWeek.length})
+            </div>
+            ${thisWeek.map(a => renderFocusAssignment(a)).join('')}
+          </div>
+        `;
+      }
+      
+      // Next Week Section
+      if (nextWeek.length > 0) {
+        html += `
+          <div class="urgency-section">
+            <div class="urgency-header urgency-next-week">
+              🟠 Next Week (${nextWeek.length})
+            </div>
+            ${nextWeek.map(a => renderFocusAssignment(a)).join('')}
+          </div>
+        `;
+      }
+      
+      // Two Weeks Section
+      if (twoWeeks.length > 0) {
+        html += `
+          <div class="urgency-section">
+            <div class="urgency-header urgency-two-weeks">
+              🔵 In 2 Weeks (${twoWeeks.length})
+            </div>
+            ${twoWeeks.map(a => renderFocusAssignment(a)).join('')}
+          </div>
+        `;
+      }
+      
+      if (!html) {
+        html = '<div class="empty-week">No upcoming assignments in the next 2 weeks!</div>';
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    function renderFocusAssignment(assignment) {
+      const dueDate = new Date(assignment.due_date);
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      let dueClass = '';
+      if (dueDate.toDateString() === now.toDateString()) {
+        dueClass = 'due-today';
+      } else if (dueDate.toDateString() === tomorrow.toDateString()) {
+        dueClass = 'due-tomorrow';
+      } else if (dueDate > now) {
+        dueClass = 'due-this-week';
+      }
+      
+      const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+      let dueText = formatDate(assignment.due_date);
+      if (daysUntil === 0) dueText = '📨 TODAY';
+      else if (daysUntil === 1) dueText = '📨 TOMORROW';
+      else dueText = `📅 ${dueText}`;
+      
+      return `
+        <div class="focus-assignment ${dueClass}">
+          <div>
+            <div class="focus-assignment-title">${assignment.title}</div>
+            <div class="focus-assignment-subject">${assignment.subject?.display_name || 'Unknown'} · ${assignment.assignment_type}</div>
+          </div>
+          <div class="focus-assignment-date">${dueText}</div>
+        </div>
+      `;
     }
     
     // Initial render
