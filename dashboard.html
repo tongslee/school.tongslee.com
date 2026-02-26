@@ -180,11 +180,6 @@
     .empty-week { text-align: center; padding: 2rem; color: var(--text-light); font-size: 0.875rem; }
     .loading { text-align: center; padding: 3rem; color: var(--text-light); }
     .last-updated { font-size: 0.75rem; color: var(--text-light); }
-    @media print {
-      .header-actions { display: none; }
-      .weeks-container { overflow: visible; flex-wrap: wrap; }
-      .week-column { min-width: 100%; margin-bottom: 1rem; }
-    }
     
     /* Mobile styles */
     @media (max-width: 768px) {
@@ -240,7 +235,6 @@
       <button class="btn btn-secondary" id="btnFocus" onclick="switchView('focus')">Focus</button>
       <button class="btn btn-secondary" onclick="goToToday()">Today</button>
       <button class="btn btn-secondary" onclick="toggleAllWeeks()">Toggle All</button>
-      <button class="btn btn-primary" onclick="window.print()">Print</button>
     </div>
   </div>
   
