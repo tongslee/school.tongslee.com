@@ -9,6 +9,16 @@ $user = 'pete.nova.1.1.2000';
 $pass = 'vxk*jmt6etg2WJK7qtc';
 $db = 'school';
 
+// Simple API key authentication
+$api_secret = $_SERVER['HTTP_AUTHORIZATION'] ?? $_GET['api_key'] ?? '';
+$valid_keys = ['abc123', 'cron-job-secret', 'school-sync-key'];
+
+if (!in_array($api_secret, $valid_keys)) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Authentication required']);
+    exit;
+}
+
 $input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input || !isset($input['assignments'])) {
