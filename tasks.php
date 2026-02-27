@@ -34,20 +34,27 @@ try {
         $category = $_POST['category'] ?? 'work';
         $priority = $_POST['priority'] ?? 'medium';
         $due_date = $_POST['due_date'] ?? null;
+        $notes = $_POST['notes'] ?? '';
         
-        $stmt = $conn->prepare("INSERT INTO tasks (title, description, category, priority, due_date) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $description, $category, $priority, $due_date]);
+        $stmt = $conn->prepare("INSERT INTO tasks (title, description, category, priority, due_date, notes) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$title, $description, $category, $priority, $due_date, $notes]);
         
         echo json_encode(['success' => true, 'id' => $conn->lastInsertId()]);
     }
     
-    // Update task status
+    // Update task
     if ($action === 'update') {
         $id = $_POST['id'] ?? 0;
         $status = $_POST['status'] ?? '';
+        $notes = $_POST['notes'] ?? null;
         
-        $stmt = $conn->prepare("UPDATE tasks SET status = ? WHERE id = ?");
-        $stmt->execute([$status, $id]);
+        if ($notes !== null) {
+            $stmt = $conn->prepare("UPDATE tasks SET status = ?, notes = ? WHERE id = ?");
+            $stmt->execute([$status, $notes, $id]);
+        } else {
+            $stmt = $conn->prepare("UPDATE tasks SET status = ? WHERE id = ?");
+            $stmt->execute([$status, $id]);
+        }
         
         echo json_encode(['success' => true]);
     }
