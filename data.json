@@ -71,6 +71,8 @@
     {"id":8,"subject_id":5,"week_id":33,"title":"Criteria A: Chemistry Unit Test","assignment_type":"test","due_date":"2026-03-18T09:30:00","status":"pending","link":""},
     {"id":9,"subject_id":1,"week_id":34,"title":"Summative 2 - Criterion A","assignment_type":"summative","due_date":"2026-03-26T23:59:00","status":"pending","link":"https://classroom.google.com/c/ODI0ODU1Njk4Mjc1/a/ODQ1NzQ0MTI5MzE4/details"},
     {"id":10,"subject_id":2,"week_id":35,"title":"Criterion B","assignment_type":"formative","due_date":"2026-04-03T23:59:00","status":"pending","link":""},
-    {"id":11,"subject_id":11,"week_id":38,"title":"Community Engagement Portfolio","assignment_type":"project","due_date":"2026-05-15T23:59:00","status":"pending","link":""}
+    {"id":11,"subject_id":11,"week_id":38,"title":"Community Engagement Portfolio","assignment_type":"project","due_date":"2026-05-15T23:59:00","status":"pending","link":""},
+    {"id":12,"subject_id":5,"week_id":32,"title":"Chemistry Test Review","assignment_type":"formative","due_date":"2026-03-20T16:00:00","status":"pending","link":"https://classroom.google.com/c/Nzg1MjA1ODM5MDc0/a/ODUxMDU3NjgwOTcw/details"},
+    {"id":13,"subject_id":8,"week_id":32,"title":"Modern Exploration Videos","assignment_type":"formative","due_date":"2026-03-19T09:30:00","status":"pending","link":"https://classroom.google.com/c/NzkxMzEzODg4Njgw/a/ODU2MTY4MzYwNjA4/details"}
   ]
 }

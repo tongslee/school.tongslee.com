@@ -50,9 +50,9 @@ async function queryDB(sql, params = []) {
 async function scrapeGoogleClassroom() {
   console.log('Starting Google Classroom scraper...');
   
-  // Use persistent context to keep login session
+  // Use persistent context to keep login session - headless for cron
   const context = await chromium.launchPersistentContext('/tmp/playwright-daniel-gclassroom', { 
-    headless: false
+    headless: true
   });
   
   const page = context.pages()[0] || await context.newPage();
