@@ -398,7 +398,7 @@
         <button class="btn btn-secondary" onclick="toggleAllWeeks()">Toggle All</button>
       </div>
       <div class="project-views hidden" id="linkedinViews">
-        <span class="view-placeholder">LinkedIn data will appear here</span>
+        <button class="btn btn-primary" id="btnCheckComments" onclick="checkLinkedInComments()">🔍 Check Comments</button>
       </div>
       <div class="project-views hidden" id="goalkeeperViews">
         <span class="view-placeholder">Goalkeeper stats will appear here</span>
@@ -997,39 +997,98 @@
       document.removeEventListener('click', closeStatusDropdown);
     }
     
-    // LinkedIn Posts Data (would come from API in production)
-    const LINKEDIN_POSTS = {
-      published: [
-        { title: "AI confidence", created: "2026-02-22", published: "2026-03-06", id: "7435656629318029312" },
-        { title: "My 7-year-old asked what AI is", created: "2026-02-27", published: "2026-03-06", id: "7435656629318029312" }
-      ],
-      approved: [
-        { title: "School dashboard project", created: "2026-03-09", id: null }
-      ],
-      drafts: [
-        { title: "Prompt perfectionism", created: "2026-02-27", status: "pending" },
-        { title: "Soccer practice reminder", created: "2026-02-27", status: "pending" },
-        { title: "Template", created: "2026-02-22", status: "pending" }
-      ],
-      comments: [
-        { postTitle: "AI confidence", author: "John Smith", text: "Great insight! I had a similar experience.", timestamp: "2h ago" },
-        { postTitle: "My 7-year-old asked what AI is", author: "Parent Tech", text: "This is adorable 😂", timestamp: "1d ago" }
-      ]
-    };
+    // LinkedIn Posts Data (loaded from API or fallback)
+    let LINKEDIN_POSTS = { published: [], approved: [], drafts: [], comments: [] };
+    
+    async function fetchLinkedInPosts() {
+      try {
+        // Try local API first
+        const res = await fetch('/api/linkedin');
+        if (res.ok) {
+          LINKEDIN_POSTS = await res.json();
+        } else {
+          throw new Error('Local API not available');
+        }
+      } catch (err) {
+        // Fallback: try remote API
+        try {
+          const res = await fetch('https://3.148.208.198:3000/api/linkedin');
+          LINKEDIN_POSTS = await res.json();
+        } catch (err2) {
+          // Final fallback: use hardcoded demo data
+          console.log('Using demo LinkedIn data');
+          LINKEDIN_POSTS = {
+            published: [
+              { title: "The weirdest part about using AI...", created: "2026-03-06" },
+              { title: "My 7-year-old asked what AI is", created: "2026-03-06" }
+            ],
+            approved: [
+              { title: "Built a simple school assignment tracker", created: "2026-03-09" }
+            ],
+            drafts: [
+              { title: "Prompt perfectionism", created: "2026-02-27" },
+              { title: "Soccer practice reminder", created: "2026-02-27" },
+              { title: "Template", created: "2026-02-22" }
+            ],
+            comments: [
+              { postTitle: "AI confidence", author: "John Smith", text: "Great insight!", timestamp: "2h ago" }
+            ]
+          };
+        }
+      }
+      renderLinkedInPosts();
+    }
+    
+    async function checkLinkedInComments() {
+      const btn = document.getElementById('btnCheckComments');
+      btn.textContent = '🔄 Checking...';
+      btn.disabled = true;
+      
+      try {
+        let res = await fetch('/api/linkedin/check-comments', { method: 'POST' });
+        if (!res.ok) throw new Error('Local API failed');
+        let result = await res.json();
+        
+        if (result.success) {
+          btn.textContent = '✅ Done!';
+          setTimeout(() => fetchLinkedInPosts(), 2000);
+        } else {
+          btn.textContent = '❌ Error';
+        }
+      } catch (err) {
+        // Try remote API
+        try {
+          const res = await fetch('https://3.148.208.198:3000/api/linkedin/check-comments', { method: 'POST' });
+          if (res.ok) {
+            btn.textContent = '✅ Done!';
+            setTimeout(() => fetchLinkedInPosts(), 2000);
+          } else {
+            btn.textContent = '⚠️ Use Browser';
+          }
+        } catch (err2) {
+          btn.textContent = '⚠️ Use Browser';
+          console.log('API not available - use browser to check comments manually');
+        }
+      }
+      
+      setTimeout(() => {
+        btn.textContent = '🔍 Check Comments';
+        btn.disabled = false;
+      }, 3000);
+    }
     
     function renderLinkedInPosts() {
       // Published
       document.getElementById('publishedCount').textContent = LINKEDIN_POSTS.published.length;
-      document.getElementById('linkedinPublished').innerHTML = LINKEDIN_POSTS.published.map(post => `
+      document.getElementById('linkedinPublished').innerHTML = LINKEDIN_POSTS.published.length ? LINKEDIN_POSTS.published.map(post => `
         <div class="linkedin-post">
           <div class="linkedin-post-title">${post.title}</div>
           <div class="linkedin-post-meta">
             <span class="linkedin-post-status status-published">Published</span>
-            <span>📅 ${post.published}</span>
-            <span>🔗 ${post.id || 'N/A'}</span>
+            <span>📅 ${post.created}</span>
           </div>
         </div>
-      `).join('');
+      `).join('') : '<div class="empty-state" style="padding:1rem;">No published posts</div>';
       
       // Approved
       document.getElementById('approvedCount').textContent = LINKEDIN_POSTS.approved.length;
@@ -1064,12 +1123,12 @@
       `).join('') : '<div class="empty-state" style="padding:1rem;">No drafts</div>';
       
       // Comments
-      if (LINKEDIN_POSTS.comments.length > 0) {
+      if (LINKEDIN_POSTS.comments && LINKEDIN_POSTS.comments.length > 0) {
         document.getElementById('linkedinCommentsAlert').style.display = 'block';
         document.getElementById('commentsCount').textContent = LINKEDIN_POSTS.comments.length;
         document.getElementById('linkedinCommentsList').innerHTML = LINKEDIN_POSTS.comments.map(c => `
           <div class="comment-item">
-            <div class="comment-author">${c.author} <span style="color:#9ca3af;font-weight:normal;">· ${c.timestamp}</span></div>
+            <div class="comment-author">${c.author} <span style="color:#9ca3af;font-weight:normal;">· ${c.timestamp || 'recently'}</span></div>
             <div class="comment-text">"${c.text}"</div>
             <div class="comment-post-title">On: ${c.postTitle}</div>
             <div class="linkedin-actions">
@@ -1077,6 +1136,8 @@
             </div>
           </div>
         `).join('');
+      } else {
+        document.getElementById('linkedinCommentsAlert').style.display = 'none';
       }
     }
     

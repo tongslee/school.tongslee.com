@@ -4,7 +4,11 @@
  */
 
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const { exec: execSync } = require('child_process');
+
+const LINKEDIN_POSTS_DIR = '/Users/openclaw/.openclaw/workspace/linkedin-posts';
 
 function exec(cmd) {
   return new Promise((resolve, reject) => {
@@ -88,6 +92,87 @@ async function handleRequest(req, res) {
       const data = parsePSQLOutput(output);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+  } else if (path === '/api/linkedin') {
+    try {
+      const result = { published: [], approved: [], drafts: [], comments: [] };
+      
+      // Read published posts
+      const publishedDir = path.join(LINKEDIN_POSTS_DIR, 'published');
+      if (fs.existsSync(publishedDir)) {
+        result.published = fs.readdirSync(publishedDir)
+          .filter(f => f.endsWith('.md'))
+          .map(f => {
+            const content = fs.readFileSync(path.join(publishedDir, f), 'utf-8');
+            const firstLine = content.split('\n')[0];
+            return {
+              title: firstLine.substring(0, 100),
+              filename: f,
+              created: fs.statSync(path.join(publishedDir, f)).mtime.toISOString().split('T')[0]
+            };
+          });
+      }
+      
+      // Read approved posts
+      const approvedDir = path.join(LINKEDIN_POSTS_DIR, 'approved');
+      if (fs.existsSync(approvedDir)) {
+        result.approved = fs.readdirSync(approvedDir)
+          .filter(f => f.endsWith('.md'))
+          .map(f => {
+            const content = fs.readFileSync(path.join(approvedDir, f), 'utf-8');
+            const firstLine = content.split('\n')[0];
+            return {
+              title: firstLine.substring(0, 100),
+              filename: f,
+              created: fs.statSync(path.join(approvedDir, f)).mtime.toISOString().split('T')[0]
+            };
+          });
+      }
+      
+      // Read drafts
+      const draftsDir = path.join(LINKEDIN_POSTS_DIR, 'drafts');
+      if (fs.existsSync(draftsDir)) {
+        result.drafts = fs.readdirSync(draftsDir)
+          .filter(f => f.endsWith('.md'))
+          .map(f => {
+            const content = fs.readFileSync(path.join(draftsDir, f), 'utf-8');
+            const firstLine = content.split('\n')[0];
+            return {
+              title: firstLine.substring(0, 100),
+              filename: f,
+              created: fs.statSync(path.join(draftsDir, f)).mtime.toISOString().split('T')[0]
+            };
+          });
+      }
+      
+      // Try to load comments from file
+      const commentsFile = path.join(LINKEDIN_POSTS_DIR, 'comments.json');
+      if (fs.existsSync(commentsFile)) {
+        result.comments = JSON.parse(fs.readFileSync(commentsFile, 'utf-8'));
+      }
+      
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+  } else if (path === '/api/linkedin/check-comments') {
+    // Trigger comment check via browser
+    try {
+      const { exec } = require('child_process');
+      exec('node /Users/openclaw/.openclaw/workspace/browser-server/linkedin-check-comments.js', (err, stdout, stderr) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, output: stdout }));
+        }
+      });
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: err.message }));
