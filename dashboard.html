@@ -54,6 +54,35 @@
     .btn-secondary { background: var(--border); color: var(--text); }
     .btn-active { background: var(--primary); color: white; }
     
+    /* Project Tabs */
+    .project-tabs { display: flex; gap: 0.25rem; margin-right: 1rem; }
+    .btn-project {
+      padding: 0.4rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: transparent;
+      color: var(--text-light);
+      transition: all 0.2s;
+    }
+    .btn-project:hover { background: var(--border); color: var(--text); }
+    .btn-project-active { background: var(--primary); color: white; }
+    .btn-project-active:hover { background: #4338ca; color: white; }
+    
+    .project-views { display: flex; gap: 0.5rem; align-items: center; }
+    .project-views.hidden { display: none; }
+    .view-placeholder { color: var(--text-light); font-size: 0.875rem; }
+    
+    .project-content.hidden { display: none; }
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-light);
+      font-size: 1.1rem;
+    }
+    
     /* Focus View Styles */
     .focus-view { display: none; }
     .focus-view.active { display: block; }
@@ -262,24 +291,57 @@
       <p class="last-updated" id="lastUpdated"></p>
     </div>
     <div class="header-actions">
-      <div class="legend">
-        <div class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span>This Week</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #f59e0b;"></span>Next Week</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #3b82f6;"></span>2 Weeks</div>
+      <!-- Project Tabs -->
+      <div class="project-tabs">
+        <button class="btn btn-project btn-project-active" id="btnDaniel" onclick="switchProject('daniel')">👦 Daniel's</button>
+        <button class="btn btn-project" id="btnLinkedIn" onclick="switchProject('linkedin')">💼 LinkedIn</button>
+        <button class="btn btn-project" id="btnGoalkeeper" onclick="switchProject('goalkeeper')">🧤 Goalkeeper</button>
+        <button class="btn btn-project" id="btnFacebook" onclick="switchProject('facebook')">📘 Facebook</button>
       </div>
-      <button class="btn btn-secondary btn-active" id="btnWeeks" onclick="switchView('weeks')">Weeks</button>
-      <button class="btn btn-secondary" id="btnFocus" onclick="switchView('focus')">Focus</button>
-      <button class="btn btn-secondary" onclick="goToToday()">Today</button>
-      <button class="btn btn-secondary" onclick="toggleAllWeeks()">Toggle All</button>
+      <div class="project-views" id="danielViews">
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span>This Week</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #f59e0b;"></span>Next Week</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #3b82f6;"></span>2 Weeks</div>
+        </div>
+        <button class="btn btn-secondary btn-active" id="btnWeeks" onclick="switchView('weeks')">Weeks</button>
+        <button class="btn btn-secondary" id="btnFocus" onclick="switchView('focus')">Focus</button>
+        <button class="btn btn-secondary" onclick="goToToday()">Today</button>
+        <button class="btn btn-secondary" onclick="toggleAllWeeks()">Toggle All</button>
+      </div>
+      <div class="project-views hidden" id="linkedinViews">
+        <span class="view-placeholder">LinkedIn data will appear here</span>
+      </div>
+      <div class="project-views hidden" id="goalkeeperViews">
+        <span class="view-placeholder">Goalkeeper stats will appear here</span>
+      </div>
+      <div class="project-views hidden" id="facebookViews">
+        <span class="view-placeholder">Facebook data will appear here</span>
+      </div>
     </div>
   </div>
   
   <div class="dashboard">
-    <div class="weeks-container" id="weeksContainer">
-      <div class="loading">Loading...</div>
+    <!-- Daniel's Project View -->
+    <div class="project-content" id="danielContent">
+      <div class="weeks-container" id="weeksContainer">
+        <div class="loading">Loading...</div>
+      </div>
+      <div class="focus-view" id="focusContainer">
+        <div class="loading">Loading...</div>
+      </div>
     </div>
-    <div class="focus-view" id="focusContainer">
-      <div class="loading">Loading...</div>
+    <!-- LinkedIn Project View -->
+    <div class="project-content hidden" id="linkedinContent">
+      <div class="empty-state">📋 LinkedIn project - Coming soon</div>
+    </div>
+    <!-- Goalkeeper Project View -->
+    <div class="project-content hidden" id="goalkeeperContent">
+      <div class="empty-state">🧤 Goalkeeper stats - Coming soon</div>
+    </div>
+    <!-- Facebook Project View -->
+    <div class="project-content hidden" id="facebookContent">
+      <div class="empty-state">📘 Facebook project - Coming soon</div>
     </div>
   </div>
 
@@ -556,6 +618,24 @@
         focusContainer.classList.remove('active');
         btnWeeks.classList.add('btn-active');
         btnFocus.classList.remove('btn-active');
+      }
+    }
+    
+    function switchProject(project) {
+      // Update project buttons
+      const projects = ['daniel', 'linkedin', 'goalkeeper', 'facebook'];
+      projects.forEach(p => {
+        document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.remove('btn-project-active');
+        document.getElementById(p + 'Content').classList.add('hidden');
+        document.getElementById(p + 'Views').classList.add('hidden');
+      });
+      document.getElementById('btn' + project.charAt(0).toUpperCase() + project.slice(1)).classList.add('btn-project-active');
+      document.getElementById(project + 'Content').classList.remove('hidden');
+      document.getElementById(project + 'Views').classList.remove('hidden');
+      
+      // Reset view to weeks when switching to Daniel
+      if (project === 'daniel') {
+        switchView('weeks');
       }
     }
     
