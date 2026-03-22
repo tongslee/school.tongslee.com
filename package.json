@@ -1,0 +1,19 @@
+{
+  "name": "school-dashboard",
+  "version": "1.0.0",
+  "description": "Daniel's School Dashboard - database agnostic",
+  "main": "api.js",
+  "scripts": {
+    "start": "node api.js",
+    "deploy": "./deploy.sh"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0"
+  },
+  "optionalDependencies": {
+    "pg": "^8.11.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

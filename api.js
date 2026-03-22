@@ -1,55 +1,15 @@
 /**
  * School Dashboard API
- * Serves assignment data for the dashboard
+ * Database-agnostic - supports SQLite and PostgreSQL
  */
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { exec: execSync } = require('child_process');
+const db = require('./db');
 
 const LINKEDIN_POSTS_DIR = '/Users/openclaw/.openclaw/workspace/linkedin-posts';
-
-function exec(cmd) {
-  return new Promise((resolve, reject) => {
-    execSync(cmd, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
-      if (err) reject(err);
-      else resolve(stdout.trim());
-    });
-  });
-}
-
-async function getSubjects() {
-  const sql = `SELECT id, name, display_name, color FROM school_subjects ORDER BY name;`;
-  return exec(`export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH" && psql -U openclaw -d openclaw -t -c "${sql.replace(/"/g, '\\"')}"`);
-}
-
-async function getWeeks() {
-  const sql = `SELECT id, week_start, week_end, term, is_current FROM school_weeks ORDER BY week_start;`;
-  return exec(`export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH" && psql -U openclaw -d openclaw -t -c "${sql.replace(/"/g, '\\"')}"`);
-}
-
-async function getAssignments() {
-  const sql = `SELECT 
-    a.id, a.title, a.assignment_type, a.due_date, a.status,
-    s.id as subject_id, s.name as subject_name, s.color,
-    w.id as week_id, w.week_start, w.week_end
-  FROM school_assignments a
-  JOIN school_subjects s ON a.subject_id = s.id
-  JOIN school_weeks w ON a.week_id = w.id
-  ORDER BY w.week_start, s.name;`;
-  return exec(`export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH" && psql -U openclaw -d openclaw -t -c "${sql.replace(/"/g, '\\"')}"`);
-}
-
-function parsePSQLOutput(output) {
-  if (!output) return [];
-  
-  const lines = output.split('\n').filter(l => l.trim());
-  return lines.map(line => {
-    const parts = line.split('|').map(p => p.trim());
-    return parts;
-  });
-}
+const PORT = process.env.PORT || 3456;
 
 async function handleRequest(req, res) {
   // Set CORS headers
@@ -64,40 +24,25 @@ async function handleRequest(req, res) {
   }
   
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const path = url.pathname;
+  const pathname = url.pathname;
   
-  if (path === '/api/subjects') {
-    try {
-      const output = await getSubjects();
-      const data = parsePSQLOutput(output);
+  try {
+    if (pathname === '/api/subjects') {
+      const data = await db.getSubjects();
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-  } else if (path === '/api/weeks') {
-    try {
-      const output = await getWeeks();
-      const data = parsePSQLOutput(output);
+      
+    } else if (pathname === '/api/weeks') {
+      const data = await db.getWeeks();
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-  } else if (path === '/api/assignments') {
-    try {
-      const output = await getAssignments();
-      const data = parsePSQLOutput(output);
+      
+    } else if (pathname === '/api/assignments') {
+      const data = await db.getAssignments();
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-  } else if (path === '/api/linkedin') {
-    try {
+      
+    } else if (pathname === '/api/linkedin') {
       const result = { published: [], approved: [], drafts: [], comments: [] };
       
       // Read published posts
@@ -156,13 +101,8 @@ async function handleRequest(req, res) {
       
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    }
-  } else if (path === '/api/linkedin/check-comments') {
-    // Trigger comment check via browser
-    try {
+      
+    } else if (pathname === '/api/linkedin/check-comments') {
       const { exec } = require('child_process');
       exec('node /Users/openclaw/.openclaw/workspace/browser-server/linkedin-check-comments.js', (err, stdout, stderr) => {
         if (err) {
@@ -173,21 +113,34 @@ async function handleRequest(req, res) {
           res.end(JSON.stringify({ success: true, output: stdout }));
         }
       });
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
+      
+    } else if (pathname === '/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ok', db: process.env.DB_TYPE || 'sqlite' }));
+      
+    } else {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Not found' }));
     }
-  } else {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not found' }));
+  } catch (err) {
+    console.error('API Error:', err);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message }));
   }
 }
 
-const PORT = process.env.PORT || 3456;
-const server = http.createServer(handleRequest);
+async function start() {
+  // Initialize database
+  await db.init();
+  await db.seedIfEmpty();
+  
+  const server = http.createServer(handleRequest);
+  server.listen(PORT, () => {
+    console.log(`School Dashboard API running on port ${PORT} (${process.env.DB_TYPE || 'sqlite'})`);
+  });
+}
 
-server.listen(PORT, () => {
-  console.log(`School Dashboard API running on port ${PORT}`);
+start().catch(err => {
+  console.error('Failed to start:', err);
+  process.exit(1);
 });
-
-module.exports = { server };
